@@ -1,11 +1,11 @@
 from functools import wraps
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from datetime import datetime
-from bson import ObjectId
+import uuid
 from flask import json
 
 
-def validate_request():
+def admin_required():
     def wrapper(fn):
         @wraps(fn)
         def decorator(*args, **kwargs):
@@ -23,7 +23,7 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, arg):
         if isinstance(arg, datetime):
             return arg.isoformat()
-        elif isinstance(arg, ObjectId):
+        elif isinstance(arg, uuid):
             return str(arg)
         else:
             super().default(arg)

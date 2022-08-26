@@ -7,4 +7,6 @@ from flask_uuid import FlaskUUID
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 jwt = JWTManager()
-uuid = FlaskUUID()
+flask_uuid = FlaskUUID()
+
+

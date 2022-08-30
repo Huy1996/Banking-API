@@ -30,6 +30,7 @@ class UserInfo(AbstractId):
     pin = db.Column(db.String(9), nullable=False)
     login_id = db.Column(UUID(as_uuid=True), db.ForeignKey('user_login.id'))
 
+
     def __init__(self, first_name, last_name, email, address, city, state, zip_code, phone_number, pin, login_id):
         self.first_name = first_name
         self.last_name = last_name

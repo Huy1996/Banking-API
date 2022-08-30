@@ -19,7 +19,7 @@ _user_login.add_argument('username', **str_require)
 _user_login.add_argument('password', **str_require)
 
 _user_login_edit = _user_login.copy()
-_user_login.add_argument('new_password', **str_require)
+_user_login_edit.add_argument('new_password', **str_require)
 
 _user_info = reqparse.RequestParser()
 _user_info.add_argument('first_name', **str_require)
@@ -31,6 +31,12 @@ _user_info.add_argument('state', **str_require)
 _user_info.add_argument('zip_code', **int_require)
 _user_info.add_argument('phone_number', **str_require)
 _user_info.add_argument('pin', **str_require)
+
+_user_info_edit = _user_info.copy()
+_user_info_edit.remove_argument('first_name')
+_user_info_edit.remove_argument('last_name')
+
+_user_info_edit
 
 
 class Login(Resource):
@@ -105,8 +111,7 @@ class User(Resource):
         return {"message": "User not found."}, 400
 
     def put(self):
-        data = _user_info.parse_args()
-        del data['first_name'], data['last_name']
+        data = _user_info_edit.parse_args()
         user = UserInfo.find_by_id(self.user_id)
         if user:
             user.update(data)

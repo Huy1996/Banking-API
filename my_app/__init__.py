@@ -1,6 +1,6 @@
 from flask import Flask
-from my_app.extensions import db, bcrypt, jwt, flask_uuid
-from my_app.blueprints import users
+from .extensions import db, bcrypt, jwt, flask_uuid
+from .blueprints import users
 
 
 def create_app(config_file='settings.py'):

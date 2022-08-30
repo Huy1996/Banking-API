@@ -1,6 +1,6 @@
 import os
 from dotenv import find_dotenv, load_dotenv
-from my_app.middleware import CustomJSONEncoder
+from my_app.utils import CustomJSONEncoder
 
 load_dotenv(find_dotenv())
 

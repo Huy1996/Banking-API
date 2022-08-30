@@ -1,4 +1,4 @@
-from my_app.base import db, AbstractId, UUID
+from my_app.models.base import db, AbstractId, UUID
 
 
 class UserLogin(AbstractId):
@@ -42,7 +42,23 @@ class UserInfo(AbstractId):
         self.pin = pin
         self.login_id = login_id
 
-
     @classmethod
     def find_by_login_id(cls, _id):
-        return cls.query.filter_by(login_in=_id).first()
+        return cls.query.filter_by(login_id=_id).first()
+
+    def update(self, new_data):
+        for key, value in new_data.items():
+            getattr(self, key)
+            setattr(self, key, value)
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "first_name": self.first_name,
+            "last_name": self.last_name,
+            "email": self.email,
+            "address": self.address,
+            "city": self.city,
+            "zip_code": self.zip_code,
+            "phone_number": self.phone_number,
+        }

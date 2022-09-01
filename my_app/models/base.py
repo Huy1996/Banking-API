@@ -7,8 +7,6 @@ from datetime import datetime
 class Base(db.Model):
     __abstract__ = True
 
-    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
-
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()
@@ -22,6 +20,7 @@ class AbstractId(Base):
     __abstract__ = True
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, unique=True)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
     updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @classmethod

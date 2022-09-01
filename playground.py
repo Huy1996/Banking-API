@@ -4,9 +4,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.dialects.postgresql import UUID
 from uuid import uuid4
+from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:test123@localhost:5433/banking'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:test123@localhost:5432/banking'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.app_context().push()
 db = SQLAlchemy(app)
@@ -28,6 +29,8 @@ class AbstractModel(Abstract):
     __abstract__ = True
 
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4, unique=True)
+    created_on = db.Column(db.DateTime(), default=datetime.utcnow)
+    updated_on = db.Column(db.DateTime(), default=datetime.utcnow, onupdate=datetime.utcnow)
 
     @classmethod
     def find_by_id(cls, _id):
@@ -80,6 +83,14 @@ class AccountStatus(enum.Enum):
     CLOSED = -1
 
 
+class TransactionCode(enum.Enum):
+    DEPOSIT = "D"
+    WITHDRAW = "W"
+    TRANSFER = "T"
+    REJECTED = "X"
+    RECEIVED = "R"
+
+
 class Account(AbstractModel):
     __tablename__ = "account"
 
@@ -92,19 +103,118 @@ class Account(AbstractModel):
                                        values_callable=lambda x: [str(member.value) for member in
                                                                   AccountStatus]),
                                nullable=False, default=AccountStatus.OPENED)
+    transactions = db.relationship("Transaction", backref="account")
 
     def __init__(self, _type, user_id):
         self.account_type = _type
         self.user_id = user_id
 
+    def transfer(self, account_id, amount):
+        self.__validate_balance(amount)
+
+        target = Account.__find_receiver(account_id)
+
+        self.balance -= amount
+        self.save_to_db()
+
+        target.receive(amount)
+        return self.__transaction_record(TransactionCode.TRANSFER, amount, target.id)
+
+    def __validate_balance(self, amount):
+        if self.balance < amount:
+            self.__transaction_record(TransactionCode.REJECTED,
+                                      amount,
+                                      comment="Insufficient amount: Your balance not enough to make this "
+                                              "transaction. "
+                                      )
+            raise ValueError("Insufficient amount: Your balance not enough to make this transaction.")
+
+    @classmethod
+    def __find_receiver(cls, account_id):
+        receiver = cls.find_by_id(account_id)
+        if not receiver or receiver.account_status == AccountStatus.CLOSED:
+            raise Warning("Account is not exist or inactive")
+        return receiver
+
+    def receive(self, amount):
+        self.balance += amount
+        self.save_to_db()
+        self.__transaction_record(TransactionCode.RECEIVED, amount)
+
+    def deposit(self, amount, check_image):
+        if amount <= 0:
+            raise ValueError("Invalid amount.")
+        self.balance += amount
+        self.save_to_db()
+        return self.__transaction_record(TransactionCode.DEPOSIT, amount, check_image=check_image)
+
+    def withdraw(self, amount):
+        self.__validate_balance(amount)
+        self.balance -= amount
+        self.save_to_db()
+        return self.__transaction_record(TransactionCode.WITHDRAW, amount)
+
+    def __transaction_record(self, code, amount, receiver=None, check_image=None, comment=""):
+        _id = self.confirmation_code(code.value)
+        transaction = Transaction(_id, amount, self.id, receiver, check_image, comment)
+        transaction.save_to_db()
+        return transaction
+
+    def confirmation_code(self, code):
+        dt_str = datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        return f'{code}-{str(self.id)[-12:]}-{dt_str}'
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "type": self.account_type.value,
+            "balance": self.balance,
+            "user_id": self.user_id,
+        }
 
 
-# from playground import UserLogin, UserInfo, Account, AccountType, db
-# db.drop_all()
-# db.create_all()
-# user_login = UserLogin("alex", "test123")
-# user_login.save_to_db()
-# user_info = UserInfo("alex", "noir", "alex@example.com", user_login.id)
-# user_info.save_to_db()
-# account = Account(AccountType["CHECKING"], user_info.id)
-# account.save_to_db()
+class Transaction(Abstract):
+    __tablename__ = "transaction"
+
+    id = db.Column(db.String(255), nullable=False, unique=True, primary_key=True)
+    transaction_amount = db.Column(db.DECIMAL, nullable=False)
+    account_id = db.Column(UUID(as_uuid=True), db.ForeignKey('account.id'), nullable=False)
+    receiver = db.Column(UUID(as_uuid=True), nullable=True)
+    check_image = db.Column(db.String(255), nullable=True)
+    comment = db.Column(db.String(255))
+
+    def __init__(self, _id, amount, sender, receiver=None, check_image=None, comment=""):
+        self.id = _id
+        self.transaction_amount = amount
+        self.account_id = sender
+        self.receiver = receiver
+        self.check_image = check_image
+        self.comment = comment
+
+    def to_json(self):
+        return {
+            "id": self.id,
+            "transaction_amount": self.transaction_amount,
+            "account_id": self.account_id,
+            "receiver": self.receiver,
+            "checking_image": self.check_image,
+            "comment": self.comment
+        }
+
+# from playground import UserLogin, UserInfo, Account, AccountType,
+
+from pprint import PrettyPrinter
+
+printer = PrettyPrinter().pprint
+
+db.drop_all()
+db.create_all()
+alex_login = UserLogin("alex", "test123")
+alex_login.save_to_db()
+alex_info = UserInfo("alex", "noir", "alex@example.com", alex_login.id)
+alex_info.save_to_db()
+alex_checking = Account(AccountType.CHECKING, alex_info.id)
+alex_checking.save_to_db()
+alex_saving = Account(AccountType.SAVING, alex_info.id)
+alex_saving.save_to_db()
+

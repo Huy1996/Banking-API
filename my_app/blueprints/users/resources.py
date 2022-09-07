@@ -59,6 +59,9 @@ class Login(Resource):
             refresh_token = create_refresh_token(identity=user.id)
 
             return {
+                "_id": user_data.id,
+                "first_name": user_data.first_name,
+                "last_name": user_data.last_name,
                 "access_token": access_token,
                 "refresh_token": refresh_token
             }, 200
@@ -70,6 +73,8 @@ class Register(Resource):
     def post(self):
         login_data = _user_login.parse_args()
         info_data = _user_info.parse_args()
+        print(login_data)
+        print(info_data)
 
         login_data["password"] = bcrypt.generate_password_hash(login_data["password"]).decode('utf8')
         user = UserLogin(**login_data)

@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from my_app.extensions import bcrypt
 from my_app.models import UserLogin, UserInfo
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, verify_jwt_in_request
+from sqlalchemy import exc
 
 str_require = {
     "type": str,
@@ -36,7 +37,6 @@ _user_info_edit = _user_info.copy()
 _user_info_edit.remove_argument('first_name')
 _user_info_edit.remove_argument('last_name')
 
-_user_info_edit
 
 
 class Login(Resource):
@@ -73,16 +73,21 @@ class Register(Resource):
     def post(self):
         login_data = _user_login.parse_args()
         info_data = _user_info.parse_args()
-        print(login_data)
-        print(info_data)
 
         login_data["password"] = bcrypt.generate_password_hash(login_data["password"]).decode('utf8')
         user = UserLogin(**login_data)
-        user.save_to_db()
+        try:
+            user.save_to_db()
+        except exc.IntegrityError:
+            return {"message": "Username already existed."}, 400
 
         info_data["login_id"] = user.id
         info = UserInfo(**info_data)
-        info.save_to_db()
+        try:
+            info.save_to_db()
+        except exc.IntegrityError:
+            user.delete_from_db()
+            return {"message": "Email are being used by other account."}, 400
 
         return {"message": "Account created successful"}, 200
 

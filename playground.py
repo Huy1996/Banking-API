@@ -7,7 +7,7 @@ from uuid import uuid4
 from datetime import datetime
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:test123@localhost:5432/banking'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:test123@localhost:5433/banking'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.app_context().push()
 db = SQLAlchemy(app)
@@ -208,13 +208,13 @@ from pprint import PrettyPrinter
 printer = PrettyPrinter().pprint
 
 db.drop_all()
-db.create_all()
-alex_login = UserLogin("alex", "test123")
-alex_login.save_to_db()
-alex_info = UserInfo("alex", "noir", "alex@example.com", alex_login.id)
-alex_info.save_to_db()
-alex_checking = Account(AccountType.CHECKING, alex_info.id)
-alex_checking.save_to_db()
-alex_saving = Account(AccountType.SAVING, alex_info.id)
-alex_saving.save_to_db()
+# db.create_all()
+# alex_login = UserLogin("alex", "test123")
+# alex_login.save_to_db()
+# alex_info = UserInfo("alex", "noir", "alex@example.com", alex_login.id)
+# alex_info.save_to_db()
+# alex_checking = Account(AccountType.CHECKING, alex_info.id)
+# alex_checking.save_to_db()
+# alex_saving = Account(AccountType.SAVING, alex_info.id)
+# alex_saving.save_to_db()
 

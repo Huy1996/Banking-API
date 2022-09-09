@@ -15,6 +15,7 @@ int_require = {
     "required": True,
     "help": "This field cannot be blank."
 }
+
 _user_login = reqparse.RequestParser()
 _user_login.add_argument('username', **str_require)
 _user_login.add_argument('password', **str_require)
@@ -36,6 +37,7 @@ _user_info.add_argument('pin', **str_require)
 _user_info_edit = _user_info.copy()
 _user_info_edit.remove_argument('first_name')
 _user_info_edit.remove_argument('last_name')
+_user_info_edit.remove_argument('pin')
 
 
 

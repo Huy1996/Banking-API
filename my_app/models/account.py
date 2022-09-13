@@ -2,6 +2,7 @@ import enum
 from my_app.models.base import db, AbstractId, UUID
 from my_app.models.transaction import Transaction
 from datetime import datetime
+from decimal import Decimal
 
 
 class AccountType(enum.Enum):
@@ -39,6 +40,7 @@ class Account(AbstractId):
     def __init__(self, _type, user_id):
         self.account_type = _type
         self.user_id = user_id
+        self.balance = 0
 
     def transfer(self, account_id, amount):
         self.__validate_balance(amount)
@@ -66,6 +68,14 @@ class Account(AbstractId):
         if not receiver or receiver.account_status == AccountStatus.CLOSED:
             raise Warning("Account is not exist or inactive")
         return receiver
+
+    @classmethod
+    def find_by_user_id(cls, user_id):
+        account_list = cls.query.filter_by(user_id=user_id)
+        if account_list.first():
+            account_list = list(account_list)
+            return account_list
+        return None
 
     def receive(self, amount):
         self.balance += amount
@@ -99,6 +109,7 @@ class Account(AbstractId):
         return {
             "id": self.id,
             "type": self.account_type.value,
-            "balance": self.balance,
+            "balance": float(self.balance),
             "user_id": self.user_id,
+            "status": self.account_status.value
         }

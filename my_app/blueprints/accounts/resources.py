@@ -1,7 +1,6 @@
 from flask_restful import Resource, reqparse
-from my_app.extensions import bcrypt
 from my_app.models import Account, AccountType
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from sqlalchemy import exc
 
 str_require = {
@@ -26,7 +25,12 @@ class BankAccount(Resource):
         self.user_id = get_jwt_identity()["user_id"]
 
     def get(self):
-        pass
+        account_list = Account.find_by_user_id(self.user_id)
+        if account_list:
+            account_list = [account.to_json() for account in account_list]
+            return account_list, 200
+        else:
+            return None, 200
 
     def post(self):
         data = _account_create.parse_args()

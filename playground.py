@@ -207,7 +207,7 @@ from pprint import PrettyPrinter
 
 printer = PrettyPrinter().pprint
 
-db.drop_all()
+# db.drop_all()
 # db.create_all()
 # alex_login = UserLogin("alex", "test123")
 # alex_login.save_to_db()

@@ -2,7 +2,6 @@ import enum
 from my_app.models.base import db, AbstractId, UUID
 from my_app.models.transaction import Transaction
 from datetime import datetime
-from decimal import Decimal
 
 
 class AccountType(enum.Enum):

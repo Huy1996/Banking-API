@@ -43,3 +43,12 @@ class BankAccount(Resource):
 
     def put(self):
         pass
+
+
+class Deposit(Resource):
+    def __init__(self):
+        verify_jwt_in_request()
+        self.user_id = get_jwt_identity()["user_id"]
+
+    def post(self):
+        pass

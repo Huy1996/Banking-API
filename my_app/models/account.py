@@ -1,25 +1,7 @@
-import enum
 from my_app.models.base import db, AbstractId, UUID
 from my_app.models.transaction import Transaction
 from datetime import datetime
-
-
-class AccountType(enum.Enum):
-    CHECKING = 'Checking'
-    SAVING = 'Saving'
-
-
-class AccountStatus(enum.Enum):
-    OPENED = 1
-    CLOSED = -1
-
-
-class TransactionCode(enum.Enum):
-    DEPOSIT = "D"
-    WITHDRAW = "W"
-    TRANSFER = "T"
-    REJECTED = "X"
-    RECEIVED = "R"
+from my_app.models.utils import *
 
 
 class Account(AbstractId):
@@ -108,7 +90,7 @@ class Account(AbstractId):
         return {
             "id": self.id,
             "type": self.account_type.value,
-            "balance": float(self.balance),
+            "balance": self.balance,
             "user_id": self.user_id,
             "status": self.account_status.value
         }

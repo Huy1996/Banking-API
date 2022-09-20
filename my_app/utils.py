@@ -3,6 +3,7 @@ from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from datetime import datetime
 from uuid import UUID
 from flask import json
+from decimal import Decimal
 
 
 def admin_required():
@@ -25,6 +26,8 @@ class CustomJSONEncoder(json.JSONEncoder):
             return arg.isoformat()
         elif isinstance(arg, UUID):
             return str(arg)
+        elif isinstance(arg, Decimal):
+            return float(arg)
         else:
             super().default(arg)
 

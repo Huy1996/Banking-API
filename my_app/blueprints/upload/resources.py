@@ -21,4 +21,4 @@ class Upload(Resource):
         s3.upload_fileobj(file, S3_BUCKET_NAME, file_name, ExtraArgs={'ACL': 'public-read'})
 
         file_url = '%s/%s/%s' % (s3.meta.endpoint_url, S3_BUCKET_NAME, file_name)
-        return {'url': file_url}, 200
+        return {'image': file_url}, 200

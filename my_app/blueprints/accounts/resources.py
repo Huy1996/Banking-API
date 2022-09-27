@@ -1,4 +1,4 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, reqparse, request
 from my_app.models import Account, AccountType
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from sqlalchemy import exc
@@ -23,6 +23,10 @@ _account_deposit = reqparse.RequestParser()
 _account_deposit.add_argument("account_id", **str_require)
 _account_deposit.add_argument("amount", **float_require)
 _account_deposit.add_argument("image", **str_require)
+
+_account_transfer = reqparse.RequestParser()
+_account_transfer.add_argument("receiver", **str_require)
+_account_transfer.add_argument("amount", **float_require)
 
 
 class BankAccount(Resource):
@@ -58,10 +62,38 @@ class Deposit(Resource):
         self.data = _account_deposit.parse_args()
 
     def post(self):
-        print(self.data)
         account = Account.find_by_id(self.data["account_id"])
         if account and str(account.user_id) == self.user_id:
             transaction = account.deposit(self.data["amount"], self.data["image"])
             return transaction.to_json(),200
+        else:
+            return {"message": "Invalid request."}, 400
+
+
+class AccountAction(Resource):
+    def __init__(self):
+        verify_jwt_in_request()
+        self.user_id = get_jwt_identity()["user_id"]
+
+
+class Transaction(AccountAction):
+    def get(self, account_id):
+        account = Account.find_by_id(account_id)
+        if account and str(account.user_id) == self.user_id:
+            transaction_list = account.transactions
+            if transaction_list:
+                transaction_list = [transaction.to_json() for transaction in transaction_list]
+                return transaction_list, 200
+        else:
+            return {"message": "Invalid request."}, 400
+
+
+class Transfer(AccountAction):
+    def post(self, account_id):
+        account = Account.find_by_id(account_id)
+        data = _account_transfer.parse_args()
+        if account and str(account.user_id) == self.user_id:
+            transaction = account.transfer(data["receiver"], data["amount"])
+            return transaction.to_json(), 200
         else:
             return {"message": "Invalid request."}, 400

@@ -93,7 +93,10 @@ class Transfer(AccountAction):
         account = Account.find_by_id(account_id)
         data = _account_transfer.parse_args()
         if account and str(account.user_id) == self.user_id:
-            transaction = account.transfer(data["receiver"], data["amount"])
+            try:
+                transaction = account.transfer(data["receiver"], data["amount"])
+            except ValueError:
+                return {"message": "Invalid request."}, 400
             return transaction.to_json(), 200
         else:
             return {"message": "Invalid request."}, 400

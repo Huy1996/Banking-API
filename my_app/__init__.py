@@ -1,5 +1,5 @@
 from flask import Flask
-from .extensions import db, bcrypt, jwt, flask_uuid, flask_s3
+from .extensions import db, bcrypt, jwt, flask_uuid
 from .blueprints import users, accounts, upload
 
 
@@ -14,7 +14,6 @@ def create_app(config_file='settings.py'):
     bcrypt.init_app(app)
     jwt.init_app(app)
     flask_uuid.init_app(app)
-    flask_s3.init_app(app)
 
 
     #--------Register Blueprint___________#
